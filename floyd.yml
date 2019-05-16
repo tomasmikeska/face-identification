@@ -1,0 +1,10 @@
+env: tensorflow-1.12
+
+task:
+    train:
+        machine: gpu
+        input:
+          - source: tomasmikeska/datasets/lfw-funneled-compressed/9
+            destination: dataset
+        description: Train FaceNet
+        command: make setup-env && DATASET=/floyd/input/dataset/dataset.npy MODEL_SAVE_PATH=/floyd/home/ python src/train.py
