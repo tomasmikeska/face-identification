@@ -1,6 +1,8 @@
 from tensorflow.keras.layers import Dense, Activation, Flatten, Dropout, Lambda, concatenate, Input, BatchNormalization, concatenate
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D
 from tensorflow.keras.models import Model
+from constants import EMBEDDING_SIZE
+
 
 def fire(x, squeeze=16, expand=64):
     x = Conv2D(squeeze, (1,1), padding='valid', activation='relu')(x)
@@ -8,7 +10,8 @@ def fire(x, squeeze=16, expand=64):
     right = Conv2D(expand, (3,3), padding='same', activation='relu')(x)
     return concatenate([left, right], axis=3)
 
-def create_model(input_shape, embedding_size):
+
+def create_model(input_shape):
     img_input = Input(input_shape)
     x = Conv2D(64, (5, 5), strides=(2, 2), padding='valid')(img_input)
     x = BatchNormalization()(x)
@@ -30,6 +33,6 @@ def create_model(input_shape, embedding_size):
     x = GlobalAveragePooling2D()(x)
     x = Dense(256, activation='relu')(x)
     x = Dropout(0.5)(x)
-    out = Dense(embedding_size, activation='sigmoid')(x)
+    out = Dense(EMBEDDING_SIZE, activation='sigmoid')(x)
 
     return Model(img_input, out)

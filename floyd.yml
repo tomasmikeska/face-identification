@@ -4,7 +4,7 @@ task:
     train:
         machine: gpu
         input:
-          - source: tomasmikeska/datasets/lfw-funneled-compressed/9
+          - source: tomasmikeska/datasets/lfw-funneled-compressed/12
             destination: dataset
         description: Train FaceNet
         command: make setup-env && DATASET=/floyd/input/dataset/dataset.npy MODEL_SAVE_PATH=/floyd/home/ python src/train.py

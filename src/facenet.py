@@ -7,6 +7,7 @@ from tensorflow.keras.layers import Input, Lambda, concatenate
 from tensorflow.keras.models import Model
 import tensorflow as tf
 import tensorflow.keras.backend as K
+from constants import EMBEDDING_SIZE
 
 
 def euclidean_distance(distance_vector):
@@ -29,7 +30,7 @@ def accuracy(_unused, stacked_dists):
     return K.mean(stacked_dists[:,0,0] < stacked_dists[:,1,0])
 
 
-def create_model(base_model, input_shape, embedding_size):
+def create_model(base_model, input_shape):
     input_anchor   = Input(shape=input_shape, name='input_anchor')
     input_positive = Input(shape=input_shape, name='input_positive')
     input_negative = Input(shape=input_shape, name='input_negative')
@@ -45,7 +46,7 @@ def create_model(base_model, input_shape, embedding_size):
     tert_dist = Lambda(euclidean_distance)([positive, negative])
 
     stacked_dists = Lambda(lambda vects: K.stack(vects, axis=1),
-                           output_shape=(None, embedding_size),
+                           output_shape=(None, EMBEDDING_SIZE),
                            name='stacked_embeddings')([pos_dist, neg_dist, tert_dist])
 
     return Model([input_anchor, input_positive, input_negative], stacked_dists, name='siamese_net')
