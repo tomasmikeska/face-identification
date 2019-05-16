@@ -7,14 +7,15 @@ from itertools import combinations
 from sklearn.utils import shuffle
 from lfw_dataset import load_dataset
 from triplet_generator import get_train_triplet_generator, get_test_triplet_generator
-from facenet import triplet_loss, accuracy
+from facenet import triplet_loss
 from utils import relative_path
-from constants import MODEL_SAVE_PATH
+from constants import MODEL_SAVE_PATH, LATEST_MODEL_PATH
 
 
 def load_model(input_shape):
     base_model = squeezenet.create_model(input_shape)
-    base_model.load_weights(relative_path('facenet_squeezenet_weights.h5')) # TODO: remove incremental learning
+    if file_exists(LATEST_MODEL_PATH):
+        base_model.load_weights(LATEST_MODEL_PATH)
     facenet_model = facenet.create_model(base_model, input_shape)
     facenet_model.compile(optimizer='adam',
                           loss=triplet_loss)
@@ -39,7 +40,7 @@ def train(siamese_model, base_model, X, y):
 
         distances = siamese_model.predict(next(test_generator))
         acc_list.append(calc_accuracy(distances))
-        
+
         acc_latest_mean = np.mean(acc_list[-50:])
         print('Acc on test: %s' % acc_latest_mean)
         if acc_latest_mean > 0.90:

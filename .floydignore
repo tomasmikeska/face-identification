@@ -13,7 +13,6 @@ var
 *.swp
 .DS_Store
 ./data/
-./model/
 .ipynb_checkpoints/
 __pycache__/
 *.ipynb

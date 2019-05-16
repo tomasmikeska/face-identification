@@ -13,6 +13,7 @@ TEST_BATCH_SIZE = 128
 
 # Paths
 MODEL_SAVE_PATH = os.environ.get('MODEL_SAVE_PATH', relative_path('../model/'))
+LATEST_MODEL_PATH = relative_path('../model/facenet_squeezenet_weights.h5')
 DATASET_COMPRESSED_PATH = os.environ.get('DATASET', relative_path('../data/dataset.npy'))
 LOCAL_TRAIN_DIR = relative_path('../data/train/')
 LOCAL_TEST_DIR = relative_path('../data/test/')

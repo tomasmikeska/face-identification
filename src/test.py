@@ -6,14 +6,14 @@ from scipy.spatial import distance
 from utils import file_listing, dir_listing, last_component
 from utils import k_nearest, most_common
 from squeezenet import create_model
-from constants import MODEL_SAVE_PATH, LOCAL_TRAIN_DIR, LOCAL_TEST_DIR
+from constants import LATEST_MODEL_PATH, LOCAL_TRAIN_DIR, LOCAL_TEST_DIR
 
 
 input_shape = (100, 75, 1)
 
 
 model = create_model(input_shape)
-model.load_weights(MODEL_SAVE_PATH + 'facenet_squeezenet_weights.h5')
+model.load_weights(LATEST_MODEL_PATH)
 
 
 def load_image(filepath):
