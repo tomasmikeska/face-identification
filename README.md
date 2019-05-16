@@ -14,7 +14,7 @@ Install pip packages using
 $ pip install -r requirements.txt
 ```
 
-Then put your local dataset into `data` file in project root. Your dataset should be split into 2 subfolders, `train` and `test`. Train and test folders should have a subfolder for each identity with his/hers id as folder name containing `{whatever}.png` files with recordings. Eval folder is flat and should contain png files directly.
+Then put your local dataset into `data` file in project root. Your dataset should be split into 2 subfolders, `train` and `test`. Train and test folders should have a subfolder for each identity with his/hers id as folder name containing `{whatever}.png` files with photos. Eval folder is flat and should contain png files directly.
 
 Example:
 ```
