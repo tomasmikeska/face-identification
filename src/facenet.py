@@ -7,7 +7,7 @@ from tensorflow.keras.layers import Input, Lambda, concatenate
 from tensorflow.keras.models import Model
 import tensorflow as tf
 import tensorflow.keras.backend as K
-from constants import EMBEDDING_SIZE
+from constants import EMBEDDING_SIZE, TRIPLET_LOSS_ALPHA
 
 
 def euclidean_distance(distance_vector):
@@ -16,7 +16,7 @@ def euclidean_distance(distance_vector):
 
 
 def triplet_loss(_unused, stacked_dists):
-    alpha     = K.constant(0.4)
+    alpha     = K.constant(TRIPLET_LOSS_ALPHA)
     pos_dist  = stacked_dists[:,0,0]
     neg_dist  = stacked_dists[:,1,0]
     tert_dist = stacked_dists[:,2,0]

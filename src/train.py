@@ -6,10 +6,10 @@ import gc
 from itertools import combinations
 from sklearn.utils import shuffle
 from lfw_dataset import load_dataset
-from triplet_generator import get_train_triplet_generator, get_test_triplet_generator
+from triplet_generator import get_offline_triplet_generator, get_online_triplet_generator, get_combined_triplet_generator
 from facenet import triplet_loss
-from utils import relative_path
-from constants import MODEL_SAVE_PATH, LATEST_MODEL_PATH
+from utils import relative_path, file_exists
+from constants import MODEL_SAVE_PATH, LATEST_MODEL_PATH, SAVE_PERIOD, TEST_BATCH_SIZE, TEST_PERIOD
 
 
 def load_model(input_shape):
@@ -32,22 +32,18 @@ def calc_accuracy(distances):
 
 
 def train(siamese_model, base_model, X, y):
-    test_generator = get_test_triplet_generator(X, y)
+    test_generator = get_offline_triplet_generator(X, y, triplet_count=TEST_BATCH_SIZE)
     acc_list = []
-    for i, batch in enumerate(get_train_triplet_generator(X, y, base_model.predict)):
+    for i, batch in enumerate(get_combined_triplet_generator(X, y, siamese_model.predict)):
         print('Training batch %s' % (i + 1))
         siamese_model.train_on_batch(batch, np.zeros(len(batch[0])))
 
-        distances = siamese_model.predict(next(test_generator))
-        acc_list.append(calc_accuracy(distances))
-
-        acc_latest_mean = np.mean(acc_list[-50:])
-        print('Acc on test: %s' % acc_latest_mean)
-        if acc_latest_mean > 0.90:
-            break
-        if i % 50 == 0:
+        if i % TEST_PERIOD == 0:
+            distances = siamese_model.predict(next(test_generator))
+            acc_list.append(calc_accuracy(distances))
+            print('Acc on test: %s' % np.mean(acc_list[-5:]))
+        if i % SAVE_PERIOD == 0:
             save_model(base_model)
-
 
 if __name__ == '__main__':
     # Train

@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from itertools import cycle
-from constants import BATCH_SIZE, MAX_PERSON_IMGS_IN_BATCH, MAX_ANCHOR_POS_COUNT_IN_BATCH, SEMIHARD_MARGIN, TEST_BATCH_SIZE
+from constants import BATCH_SIZE, MAX_PERSON_IMGS_IN_BATCH, MAX_ANCHOR_POS_COUNT_IN_BATCH, SEMIHARD_MARGIN
 
 
 def is_semihard(anchor, pos, neg):
@@ -18,7 +18,7 @@ def person_image_mapping(images, targets):
     return person_images
 
 
-def get_test_triplet_generator(X, y):
+def get_offline_triplet_generator(X, y, triplet_count=BATCH_SIZE):
     person_image = person_image_mapping(X, y)
 
     while True:
@@ -26,7 +26,7 @@ def get_test_triplet_generator(X, y):
         batch_pos    = []
         batch_neg    = []
 
-        for _ in range(0, TEST_BATCH_SIZE):
+        for _ in range(0, triplet_count):
             anchor, neg = random.sample(list(person_image.keys()), 2)
             anchor_img, pos_img = random.sample(person_image[anchor], 2)
             neg_img = random.choice(person_image[neg])
@@ -37,46 +37,27 @@ def get_test_triplet_generator(X, y):
         yield [np.array(batch_anchor), np.array(batch_pos), np.array(batch_neg)]
 
 
-def get_train_triplet_generator(X, y, calc_embedding):
-    person_image = person_image_mapping(X, y)
-    batch_anchor = []
-    batch_pos    = []
-    batch_neg    = []
+def get_online_triplet_generator(X, y, calc_distances, triplet_count=BATCH_SIZE):
+    offline_gen = get_offline_triplet_generator(X, y, triplet_count=int(triplet_count*1.25))
+    batch = np.empty((3, 0,) + X.shape[1:])
 
-    for person in cycle(person_image.keys()):
-        pos_tuples = zip(person_image[person], person_image[person][1:])
-        person_count = 0
+    while True:
+        sub_batch = next(offline_gen)
+        dists = calc_distances(sub_batch)
+        semihard_indices = np.where(dists[:, 0, 0] + SEMIHARD_MARGIN > dists[:, 1, 0])[0]
+        batch = np.append(batch, np.array(sub_batch)[:, semihard_indices], axis=1)
 
-        for anchor_img, pos_img in pos_tuples:
-            other_people_imgs = [ imgs for other_person, imgs in person_image.items() if person != other_person ]
-            other_people_imgs = [ img for imgs in other_people_imgs for img in imgs ]
-            random.shuffle(other_people_imgs)
-            anchor_emb = calc_embedding(anchor_img.reshape((1,) + anchor_img.shape))
-            anchor_pos_count = 0
+        if batch.shape[1] >= triplet_count:
+            yield [batch[0], batch[1], batch[2]]
+            batch = np.empty((3, 0,) + X.shape[1:])
 
-            for neg_img in other_people_imgs:
-                pos_emb = calc_embedding(pos_img.reshape((1,) + pos_img.shape))
-                neg_emb = calc_embedding(neg_img.reshape((1,) + neg_img.shape))
 
-                if is_semihard(anchor_emb, pos_emb, neg_emb):
-                    batch_anchor.append(anchor_img)
-                    batch_pos.append(pos_img)
-                    batch_neg.append(neg_img)
-                    person_count += 1
-                    anchor_pos_count += 1
+def get_combined_triplet_generator(X, y, calc_distances):
+    offline_gen = get_offline_triplet_generator(X, y, triplet_count=(BATCH_SIZE // 2))
+    online_gen  = get_online_triplet_generator(X, y, calc_distances, triplet_count=(BATCH_SIZE // 2))
 
-                if len(batch_anchor) == BATCH_SIZE:
-                    yield [np.array(batch_anchor), np.array(batch_pos), np.array(batch_neg)]
-                    anchor_emb = calc_embedding(anchor_img.reshape((1,) + anchor_img.shape))
-                    batch_anchor = []
-                    batch_pos    = []
-                    batch_neg    = []
-
-                if anchor_pos_count >= MAX_ANCHOR_POS_COUNT_IN_BATCH:
-                    break
-
-                if person_count >= MAX_PERSON_IMGS_IN_BATCH:
-                    break
-
-            if person_count >= MAX_PERSON_IMGS_IN_BATCH:
-                    break
+    while True:
+        offline_batch = next(offline_gen)
+        online_batch  = next(online_gen)
+        batch = list(map(lambda t: np.concatenate(t, axis=0), zip(offline_batch, online_batch)))
+        yield batch
