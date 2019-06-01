@@ -11,7 +11,7 @@ def fire(x, squeeze=16, expand=64):
     return concatenate([left, right], axis=3)
 
 
-def create_model(input_shape):
+def create_model(n_classes, input_shape):
     img_input = Input(input_shape)
     x = Conv2D(64, (5, 5), strides=(2, 2), padding='valid')(img_input)
     x = BatchNormalization()(x)
@@ -31,8 +31,6 @@ def create_model(input_shape):
     x = Conv2D(512, (1, 1), padding='same')(x)
     x = Activation('relu')(x)
     x = GlobalAveragePooling2D()(x)
-    x = Dense(256, activation='relu')(x)
-    x = Dropout(0.5)(x)
-    out = Dense(EMBEDDING_SIZE, activation='sigmoid')(x)
+    out = Dense(n_classes, activation='softmax')(x)
 
     return Model(img_input, out)

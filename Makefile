@@ -7,11 +7,11 @@ setup-env:
 compress-dataset:
 	python src/dataset.py
 
+floyd-process-dataset:
+	floyd run --task process_dataset
+
 floyd-train:
 	floyd run --task train
-
-floyd-train-cpu:
-	floyd run --task train-cpu
 
 local-train:
 	python src/train.py

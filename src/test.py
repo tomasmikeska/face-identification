@@ -3,17 +3,25 @@ import os
 import cv2
 from skimage.transform import resize
 from scipy.spatial import distance
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.models import Model
 from utils import file_listing, dir_listing, last_component
 from utils import k_nearest, most_common
 from squeezenet import create_model
-from constants import LATEST_MODEL_PATH, LOCAL_TRAIN_DIR, LOCAL_TEST_DIR
+from constants import LATEST_MODEL_PATH, LOCAL_TRAIN_DIR, LOCAL_TEST_DIR, EMBEDDING_SIZE
 
 
-input_shape = (100, 75, 1)
+input_shape = (125, 94, 1)
 
-
-model = create_model(input_shape)
-model.load_weights(LATEST_MODEL_PATH)
+n_classes = 158
+base_model = create_model(n_classes, input_shape)
+base_model.layers.pop()
+x = base_model.output
+x = Dense(1024, activation='relu')(x)
+x = Dropout(0.5)(x)
+x = Dense(EMBEDDING_SIZE, activation='sigmoid')(x)
+model = Model(base_model.input, x)
+model.load_weights('../model/facenet_squeezenet_weights.h5')
 
 
 def load_image(filepath):
