@@ -1,11 +1,5 @@
 TB_PORT=9090
 
-setup-env:
-	pip3 install -r requirements.txt
-
-compress-dataset:
-	python3 src/dataset.py
-
 paperspace-train:
 	git archive -o paperspace.zip $(shell git stash create)
 	gradient jobs create \
@@ -17,7 +11,7 @@ paperspace-train:
 		--command "make train"
 
 train:
-	make setup-env
+	pip3 install -r requirements.txt
 	tensorboard --logdir=/artifacts/tb_logs/ --port=$(TB_PORT) &
 	VGG_DATASET=/storage/datasets/VGGFace2/ \
 	BB_TRAIN=/storage/datasets/bb_landmark/loose_bb_train.csv \
