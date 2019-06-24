@@ -1,56 +1,53 @@
-# Face Identification (in-progress)
+# Face Identification
 
-This project trains a SqueezeNet based FaceNet neural net to identify faces.
+This is a Keras implementation of the face identification model using *Center loss* as proposed in paper ["A Discriminative Feature Learning Approach for Deep Face Recognition"](https://ydwen.github.io/papers/WenECCV16.pdf).
 
 #### Requirements
 
 - Python 3.x
 - pip
 
-### Installation and setup
+#### Installation and setup
 
 Install pip packages using
 ```
 $ pip install -r requirements.txt
 ```
 
-Then put your local dataset into `data` file in project root. Your dataset should be split into 2 subfolders, `train` and `test`. Train and test folders should have a subfolder for each identity with his/hers id as folder name containing `{whatever}.png` files with photos. Eval folder is flat and should contain png files directly.
+Download **VGGFace2** dataset for training to `data/` folder from [here](https://www.robots.ox.ac.uk/~vgg/data/vgg_face2/)
+(images and bb_landmarks), **LFW** dataset for validation from [here](http://vis-www.cs.umass.edu/lfw/)
+(funneled images and pairs.txt).
 
-Example:
+[optional]
+
+There is a Docker image included that was used for training in cloud. You can build it from local Dockerfile with
 ```
-.
-+-- data
-|   +-- train
-|       +-- person1
-|           ├── a1.png
-|           └── a2.png
-|       +-- person1
-|           ├── b1.png
-|           └── b2.png
-|       +-- ...
-|   +-- test
-|       +-- person1
-|           ├── a1.png
-|           └── a2.png
-|       +-- person1
-|           ├── b1.png
-|           └── b2.png
-|       +-- ...
+docker build -t ml-box .
+```
+or get it from Docker Hub
+```
+docker pull tomikeska/ml-box
 ```
 
 #### Usage
 
-Train model using command (trained on LFW dataset from sklearn)
+Train model using command
 ```
-$ python src/facenet_train.py
-```
-
-After training the nn params are saved to `model/` folder.
-
-Evaluate using command
-
-```
-$ python src/facenet_eval.py
+$ python src/train.py
 ```
 
-🎉 🎉
+After training the weights are saved to `model/` folder by default. These weights contain all training layers (2 inputs, 2 outputs - softmax and centerloss) so in order to convert them to production model (single input and output) run command
+```
+$ python src/convert_model.py --weights model/xception_centerloss_weights.h5 --nclasses 5386 -o model/xception_prod.h5
+```
+
+Evaluate on LFW using command
+
+```
+$ python src/lfw_validate.py --model model/xception_prod.h5
+```
+
+#### Training
+
+Training took \~20 hours on NVIDIA P5000 on subset of VGGFace2 (~1M images, ~5K identities). Xception was used
+as a base model and model was trained in softmax-only setting first (λ=0). Best LFW accuracy obtained is 96.6%.
