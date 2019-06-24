@@ -1,17 +1,29 @@
-
-DATASET=data/dataset.npy
+TB_PORT=9090
 
 setup-env:
-	pip install -r requirements.txt
+	pip3 install -r requirements.txt
 
 compress-dataset:
-	python src/dataset.py
+	python3 src/dataset.py
 
-floyd-process-dataset:
-	floyd run --task process_dataset
+paperspace-train:
+	git archive -o paperspace.zip $(shell git stash create)
+	gradient jobs create \
+		--name "face identification train" \
+		--machineType "P4000" \
+		--container "tomikeska/ml-box" \
+		--workspaceArchive paperspace.zip \
+		--ports $(TB_PORT):$(TB_PORT) \
+		--command "make train"
 
-floyd-train:
-	floyd run --task train
+train:
+	make setup-env
+	tensorboard --logdir=/artifacts/tb_logs/ --port=$(TB_PORT) &
+	VGG_DATASET=/storage/datasets/VGGFace2/ \
+	BB_TRAIN=/storage/datasets/bb_landmark/loose_bb_train.csv \
+	MODEL_SAVE_PATH=/artifacts/ \
+	TB_LOGS=/artifacts/tb_logs/ \
+	python3 src/train.py
 
 local-train:
-	python src/train.py
+	python3 src/train.py

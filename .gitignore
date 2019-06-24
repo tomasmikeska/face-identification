@@ -108,4 +108,6 @@ model/*
 *.h5
 *.hdf5
 data/*
-tb_logs/*
+tb_logs/
+*.zip
+notebooks/*

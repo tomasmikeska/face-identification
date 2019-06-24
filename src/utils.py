@@ -2,9 +2,11 @@ from os import listdir, makedirs
 from os.path import isfile, isdir, join, exists, dirname
 
 
-def file_listing(dir, extension):
+def file_listing(dir, extension=None):
     files = [join(dir, f) for f in listdir(dir) if isfile(join(dir, f))]
-    return list(filter(lambda f: f.endswith('.' + extension), files))
+    if extension:
+        files = list(filter(lambda f: f.endswith('.' + extension), files))
+    return files
 
 
 def dir_listing(base_dir):
@@ -17,7 +19,7 @@ def mkdir(path):
 
 
 def last_component(path):
-    return path.split('/')[-1]
+    return list(filter(None, path.split('/')))[-1]
 
 
 def file_exists(path):

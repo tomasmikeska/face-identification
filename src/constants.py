@@ -1,23 +1,26 @@
 import os
 from utils import relative_path
 
+
 # Hyperparams
-EMBEDDING_SIZE = 512
-MIN_FACES_PER_PERSON = 2
-BATCH_SIZE = 512
-TRIPLET_LOSS_ALPHA = 0.5
-MAX_PERSON_IMGS_IN_BATCH = 50
-MAX_ANCHOR_POS_COUNT_IN_BATCH = 10
-SEMIHARD_MARGIN = 0.3
-TEST_BATCH_SIZE = 512
-TEST_PERIOD = 5 # every 'x' batches
-SAVE_PERIOD = 20 # every 'x' batches
+EMBEDDING_SIZE       = 256
+MIN_FACES_PER_PERSON = 130  # Min faces per person in training data
+DEV_FACES_PER_PERSON = 5    # Number of images per person in dev data
+BATCH_SIZE           = 128
+EPOCHS               = 20
+EPOCH_PARTITION      = 1. / 5.  # Epoch subset to use in training for more updates (callbacks, val data eval)
+TARGET_IMG_WIDTH     = 96
+TARGET_IMG_HEIGHT    = 112
+MIN_IMG_WIDTH        = TARGET_IMG_WIDTH   # no image upscale allowed
+MIN_IMG_HEIGHT       = TARGET_IMG_HEIGHT  # no image upscale allowed
+INPUT_SHAPE          = (TARGET_IMG_HEIGHT, TARGET_IMG_WIDTH, 3)
 
 # Paths
-MODEL_SAVE_PATH = os.environ.get('MODEL_SAVE_PATH', relative_path('../model/'))
-LATEST_MODEL_PATH = relative_path('../model/facenet_squeezenet_weights.h5')
-LATEST_SOFTMAX_MODEL_PATH = relative_path('../model/squeezenet_softmax_weights.h5')
-DATASET_COMPRESSED_PATH = os.environ.get('DATASET', relative_path('../data/dataset.npy'))
-VGG_TRAIN_PATH = os.environ.get('VGG_DATASET', relative_path('../data/VGGFace2/train/'))
-LOCAL_TRAIN_DIR = relative_path('../data/train/')
-LOCAL_TEST_DIR = relative_path('../data/test/')
+MODEL_SAVE_PATH      = os.environ.get('MODEL_SAVE_PATH', relative_path('../model/'))
+VGG_TRAIN_PATH       = os.environ.get('VGG_DATASET', relative_path('../data/VGGFace2/')) + '/train/'
+VGG_TEST_PATH        = os.environ.get('VGG_DATASET', relative_path('../data/VGGFace2/')) + '/test/'
+VGG_BB_TEST_MAP      = os.environ.get('BB_TEST', relative_path('../data/bb_landmark/loose_bb_test.csv'))
+VGG_BB_TRAIN_MAP     = os.environ.get('BB_TRAIN', relative_path('../data/bb_landmark/loose_bb_train.csv'))
+LFW_PATH             = os.environ.get('LFW_DATASET', relative_path('../data/lfw/'))
+LFW_PAIRS_PATH       = os.environ.get('LFW_PAIRS', relative_path('../data/lfw_pairs.txt'))
+TB_LOGS              = os.environ.get('TB_LOGS', relative_path('../tb_logs/'))

@@ -1,61 +1,80 @@
 import numpy as np
-import itertools
-from itertools import cycle, combinations
-import random
-from sklearn.utils import shuffle
-from tensorflow.keras.layers import Input, Lambda, concatenate, Dense, Dropout
-from tensorflow.keras.models import Model
+from keras.layers import Dense, GlobalAveragePooling2D, Lambda, Input, Flatten
+from keras.models import Model
+from keras.applications.xception import Xception
 import tensorflow as tf
-import tensorflow.keras.backend as K
-from constants import EMBEDDING_SIZE, TRIPLET_LOSS_ALPHA
+import keras.backend as K
+from keras.engine.topology import Layer
+from metrics import dominant_label_metric, confidence_metric
 
 
-def euclidean_distance(embeddings):
-    x, y = embeddings
-    return K.sqrt(K.maximum(K.sum(K.square(x - y), axis=1, keepdims=True), K.epsilon()))
+LAMBDA = 0.03
+ALPHA  = 0.5
 
 
-def triplet_loss(_unused, stacked_dists):
-    alpha     = K.constant(TRIPLET_LOSS_ALPHA)
-    pos_dist  = stacked_dists[:,0,0]
-    neg_dist  = stacked_dists[:,1,0]
-    tert_dist = stacked_dists[:,2,0]
+class CenterLossLayer(Layer):
 
-    return K.mean(K.maximum(K.constant(0),
-                            pos_dist - 0.5*(neg_dist + tert_dist) + alpha))
+    def __init__(self, n_classes=10, embedding_size=2, alpha=ALPHA, **kwargs):
+        super().__init__(**kwargs)
+        self.n_classes = n_classes
+        self.emb_size = embedding_size
+        self.alpha = alpha
+
+    def build(self, input_shape):
+        self.centers = self.add_weight(name='centers',
+                                       shape=(self.n_classes, self.emb_size),
+                                       initializer='uniform',
+                                       trainable=False)
+        super().build(input_shape)
+
+    def call(self, inputs, mask=None):
+        x, targets = inputs
+        # center_count = 1 + Σ_m_i δ(y_i = j)
+        center_count = K.sum(K.transpose(targets), axis=1, keepdims=True) + 1
+        # Δc_j = (Σ_m_i δ(y_i = j) * (c_j - x_i)) / center_count
+        delta_centers = K.dot(K.transpose(targets), K.dot(targets, self.centers) - x) / center_count
+        # c_j = c_j - α * Δc_j
+        updated_centers = self.centers - self.alpha * delta_centers
+        self.add_update((self.centers, updated_centers), x)
+        # L = (1/2) * Σ_m_i (x_i - c_yi)^2
+        self.loss = x - K.dot(targets, self.centers)
+        self.loss = K.sum(self.loss * self.loss, axis=1, keepdims=True)
+        return self.loss
+
+    def compute_output_shape(self, input_shape):
+        return K.int_shape(self.loss)
 
 
-def accuracy(_unused, stacked_dists):
-    '''Compute acc as percentage of triplets that satisfy pos_dist < neg_dist'''
-    return K.mean(stacked_dists[:,0,0] < stacked_dists[:,1,0])
 
+def load_model(input_shape, n_classes, embedding_size):
+    targets = Input(shape=(n_classes,))
 
-def create_facenet_model(base_model, input_shape):
-    # Add embedding top
+    base_model = Xception(include_top=False,
+                          weights=None,
+                          input_shape=input_shape,
+                          pooling='avg')
     x = base_model.output
-    x = Dense(1024, activation='relu')(x)
-    x = Dropout(0.5)(x)
-    x = Dense(EMBEDDING_SIZE, activation='sigmoid')(x)
-    base_model = Model(base_model.input, x)
+    emb_out = Dense(embedding_size, name='emb_out')(x)
 
-    input_anchor   = Input(shape=input_shape, name='input_anchor')
-    input_positive = Input(shape=input_shape, name='input_positive')
-    input_negative = Input(shape=input_shape, name='input_negative')
+    softmax_out = Dense(n_classes,
+                        activation='softmax',
+                        name='softmax_out')(emb_out)
+    # L2 normalization
+    l2_normalized = Lambda(lambda x: x / K.sqrt(K.sum(x * x, axis=1, keepdims=True)))(emb_out)
 
-    normalize = Lambda(lambda x: K.l2_normalize(x, axis=-1), name='normalize')
+    center_loss = CenterLossLayer(n_classes=n_classes,
+                                  embedding_size=embedding_size,
+                                  name='centerloss_out')([l2_normalized, targets])
 
-    anchor   = normalize(base_model(input_anchor))
-    positive = normalize(base_model(input_positive))
-    negative = normalize(base_model(input_negative))
+    model = Model(inputs=[base_model.input, targets],
+                  outputs=[softmax_out, center_loss])
+    model.compile(optimizer='nadam',
+                  loss=['categorical_crossentropy', lambda y_true, y_pred: y_pred],
+                  loss_weights=[1.0, LAMBDA],  # L = L_softmax + λ * L_center
+                  metrics=['accuracy', dominant_label_metric(), confidence_metric()])
 
-    # Compute L2 norms in model graph instead of in triplet loss
-    # to be able to use them in metrics
-    pos_dist  = Lambda(euclidean_distance)([anchor, positive])
-    neg_dist  = Lambda(euclidean_distance)([anchor, negative])
-    tert_dist = Lambda(euclidean_distance)([positive, negative])
+    return model
 
-    stacked_dists = Lambda(lambda vects: K.stack(vects, axis=1),
-                           output_shape=(None, EMBEDDING_SIZE),
-                           name='stacked_embeddings')([pos_dist, neg_dist, tert_dist])
 
-    return Model([input_anchor, input_positive, input_negative], stacked_dists, name='siamese_net'), base_model
+def preprocess_input(x):
+    return x / 255.0
