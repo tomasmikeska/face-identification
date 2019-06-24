@@ -14,8 +14,8 @@ Install pip packages using
 $ pip install -r requirements.txt
 ```
 
-Download **VGGFace2** dataset for training to `data/` folder from [here](https://www.robots.ox.ac.uk/~vgg/data/vgg_face2/)
-(images and bb_landmarks), **LFW** dataset for validation from [here](http://vis-www.cs.umass.edu/lfw/)
+Download **VGGFace2** dataset for training to `data/` folder [here](https://www.robots.ox.ac.uk/~vgg/data/vgg_face2/)
+(images and bb_landmarks), **LFW** dataset for validation [here](http://vis-www.cs.umass.edu/lfw/)
 (funneled images and pairs.txt).
 
 [optional]
