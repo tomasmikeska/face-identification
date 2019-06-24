@@ -1,3 +1,10 @@
+'''
+Convert trained model to ready-to-use model
+
+Model used for training contained 2 inputs and output in order to use it
+with Center loss layers. This module converts it into model with single
+input and single normalized embedding output.
+'''
 import argparse
 from keras.models import Model
 from model import load_model

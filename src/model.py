@@ -13,21 +13,29 @@ ALPHA  = 0.5
 
 
 def load_model(input_shape, n_classes, embedding_size):
-    targets = Input(shape=(n_classes,))
+    '''Get Xception-based model with Center loss function
 
+    Args:
+        input_shape (tuple): input image shape, only one of 2 model inputs (it takes targets as well)
+        n_classes (int): Number of identities
+        embedding_size (int): Size of embedding vector
+    '''
+    targets = Input(shape=(n_classes,))
+    # Xception base model
     base_model = Xception(include_top=False,
                           weights=None,
                           input_shape=input_shape,
                           pooling='avg')
     x = base_model.output
+    # Embedding output - without l2 normalization
     emb_out = Dense(embedding_size, name='emb_out')(x)
-
+    # Softmax output
     softmax_out = Dense(n_classes,
                         activation='softmax',
                         name='softmax_out')(emb_out)
-    # L2 normalization
+    # L2 normalized embedding - final layer in final model
     l2_normalized = Lambda(lambda x: x / K.sqrt(K.sum(x * x, axis=1, keepdims=True)))(emb_out)
-
+    # Center loss layer is used because it uses its own weights
     center_loss = CenterLossLayer(n_classes=n_classes,
                                   embedding_size=embedding_size,
                                   alpha=LAMBDA,
@@ -44,4 +52,5 @@ def load_model(input_shape, n_classes, embedding_size):
 
 
 def preprocess_input(x):
+    '''Scale RGB image to [0, 1] range'''
     return x / 255.0

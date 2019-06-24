@@ -17,18 +17,26 @@ from constants import MIN_IMG_WIDTH, MIN_IMG_HEIGHT, TARGET_IMG_WIDTH, TARGET_IM
 
 
 def center_dist(face_bb, img_np):
+    '''Calculates distances of face bounding box from center of image
+
+    Args:
+        face_bb (object): MTCNN bounding box
+        img_np (numpy array): Image RGB data
+    '''
     face_x, face_y, face_w, face_h = face_bb['box']
     img_h, img_w, _ = img_np.shape
     return (face_y + face_h / 2. - img_h / 2.)**2 + (face_x + face_w / 2. - img_w / 2.)**2
 
 
 def extract_face(img_np, face_detector):
+    '''Detect face, crop it and resize to target width and height'''
     faces = face_detector.detect_faces(img_np)
 
     if len(faces) > 0:
         faces = sorted(faces, key=lambda x: center_dist(x, img_np))
         x, y, width, height = faces[0]['box']
 
+        # Deltas - distances to match target bounding box
         hor_delta = int(max(0, height - width) / 2)
         ver_delta = int(max(0, width - height) / 2)
 
@@ -71,15 +79,15 @@ def calculate_distances(model, pairs, face_detector):
 def evaluate(model, pairs, face_detector):
     pair_dists, pair_labels = calculate_distances(model, pairs, face_detector)
     pair_dists = np.reshape(pair_dists, (len(pair_dists), 1))
-    # Train binary classifier to get best threshold value possible
+    # Train binary classifier to get threshold value and separate classes
     clf = LinearSVC()
     clf.fit(pair_dists, pair_labels)
     acc = clf.score(pair_dists, pair_labels)
-    # Print accuracy and best threshold value
-    print('Accuracy: %s' % acc)
+    return acc
 
 
 def read_pairs(pairs_meta_path):
+    '''Read LFW pairs in [(img_left_np, img_right_np, is_same_person)] format'''
     pairs = []
     with open(pairs_meta_path, 'r') as f:
         for line in f.readlines():
@@ -109,7 +117,8 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, help='Converted model path')
     args = parser.parse_args()
     # Evaluate
-    face_detector = MTCNN()
-    model = load_model(args.model)
-    pairs = read_pairs(LFW_PAIRS_PATH)
-    evaluate(model, pairs, face_detector)
+    face_detector = MTCNN()  # Model used for detectign face bounding boxes
+    model = load_model(args.model)  # Trained face verification model
+    pairs = read_pairs(LFW_PAIRS_PATH)  # LFW validation pairs
+    acc = evaluate(model, pairs, face_detector)
+    print('Accuracy: %s' % acc)
