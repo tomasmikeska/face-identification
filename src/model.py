@@ -45,7 +45,6 @@ class CenterLossLayer(Layer):
         return K.int_shape(self.loss)
 
 
-
 def load_model(input_shape, n_classes, embedding_size):
     targets = Input(shape=(n_classes,))
 

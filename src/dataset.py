@@ -103,5 +103,5 @@ def get_dev_data(image_mapping_df):
 
     X, y = shuffle(X, y)
     y_categorical = to_categorical(y, num_classes=n_identities)
-    
+
     return [np.array(X), y_categorical], [y_categorical, np.random.rand(len(X), 1)]

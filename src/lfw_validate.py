@@ -33,7 +33,7 @@ def extract_face(img_np, face_detector):
         ver_delta = int(max(0, width - height) / 2)
 
         img_pil = Image.fromarray(img_np)
-        img_pil = img_pil.crop((x-hor_delta, y-ver_delta, x+width+hor_delta, y+height+ver_delta))
+        img_pil = img_pil.crop((x - hor_delta, y - ver_delta, x + width + hor_delta, y + height + ver_delta))
         img_pil = img_pil.resize((TARGET_IMG_WIDTH, TARGET_IMG_HEIGHT), Image.ANTIALIAS)
 
         return np.array(img_pil)
