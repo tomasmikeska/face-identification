@@ -51,3 +51,5 @@ $ python src/lfw_validate.py --model model/xception_prod.h5
 
 Training took \~20 hours on NVIDIA P5000 on subset of VGGFace2 (~1M images, ~5K identities). Xception was used
 as a base model and model was trained in softmax-only setting first (λ=0). Best LFW accuracy obtained is 96.6%.
+
+Trained and converted model can be downloaded from releases [here](https://github.com/tomasmikeska/face-identification/releases/download/v1.0/xception_prod_0.966.h5).
