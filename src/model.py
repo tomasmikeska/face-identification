@@ -1,6 +1,5 @@
 import numpy as np
 from keras.layers import BatchNormalization, Dropout, Dense, Input
-from layers.batch_renorm import BatchRenormalization
 from keras.models import Model
 import tensorflow as tf
 import keras.backend as K
@@ -36,7 +35,10 @@ def load_model(input_shape, n_classes, embedding_size):
               use_bias=False)(x)
     x = BatchNormalization(name='embeddings', scale=False)(x)
     # ArcFace softmax layer
-    out = ArcFace(n_classes, m=ARCFACE_M, s=ARCFACE_S, regularizer=regularizers.l2(1e-4))([x, targets])
+    out = ArcFace(n_classes,
+                  m=ARCFACE_M,
+                  s=ARCFACE_S,
+                  regularizer=regularizers.l2(1e-4))([x, targets])
     # Create model
     model = Model([img_input, targets], out)
 
