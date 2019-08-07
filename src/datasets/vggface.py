@@ -2,29 +2,27 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
-from sklearn.utils import shuffle
 from tqdm import tqdm
 from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
 from model import preprocess_input
 from constants import MIN_IMG_WIDTH, MIN_IMG_HEIGHT, TARGET_IMG_WIDTH, TARGET_IMG_HEIGHT, MIN_FACES_PER_PERSON
 from constants import VGG_TRAIN_PATH, VGG_TEST_PATH, INPUT_SHAPE, DEV_FACES_PER_PERSON, INPUT_SHAPE
-from utils import file_listing, dir_listing, last_component, get_file_name, relative_path, mkdir
 
 
 def extract_face(img_np, bb):
     x, y, width, height = bb.X, bb.Y, bb.W, bb.H
 
     if width / height > TARGET_IMG_WIDTH / TARGET_IMG_HEIGHT:
-        fin_width = width
+        fin_width  = width
         fin_height = int(fin_width * (TARGET_IMG_HEIGHT / float(TARGET_IMG_WIDTH)))
-        fin_x = x
-        fin_y = y - (fin_height - height) / 2
+        fin_x      = x
+        fin_y      = y - (fin_height - height) / 2
     else:
         fin_height = height
-        fin_width = int(fin_height * (TARGET_IMG_WIDTH / float(TARGET_IMG_HEIGHT)))
-        fin_x = x - (fin_width - width) / 2
-        fin_y = y
+        fin_width  = int(fin_height * (TARGET_IMG_WIDTH / float(TARGET_IMG_HEIGHT)))
+        fin_x      = x - (fin_width - width) / 2
+        fin_y      = y
 
     img_pil = Image.fromarray(img_np)
     img_pil = img_pil.crop((fin_x, fin_y, fin_x + fin_width, y + fin_height))
@@ -101,7 +99,6 @@ def get_dev_data(image_mapping_df):
         X.append(read_image(file, row))
         y.append(np.argmax(identities == row['NAME']))
 
-    X, y = shuffle(X, y)
     y_categorical = to_categorical(y, num_classes=n_identities)
 
     return [np.array(X), y_categorical], [y_categorical, np.random.rand(len(X), 1)]

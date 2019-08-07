@@ -11,11 +11,8 @@ from model import load_model
 from constants import INPUT_SHAPE, EMBEDDING_SIZE
 
 
-EMB_LAYER_INDEX = -4
-
-
 def convert_to_prod_model(model):
-    prod_model = Model(inputs=model.inputs[0], outputs=model.layers[EMB_LAYER_INDEX].output)
+    prod_model = Model(inputs=model.inputs[0], outputs=model.get_layer(name='embeddings').output)
     prod_model.compile(optimizer='nadam', loss='categorical_crossentropy')
     return prod_model
 

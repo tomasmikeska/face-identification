@@ -1,6 +1,6 @@
 # Face Identification
 
-This is a Keras implementation of the face identification model using *Center loss* as proposed in paper ["A Discriminative Feature Learning Approach for Deep Face Recognition"](https://ydwen.github.io/papers/WenECCV16.pdf).
+This is a Keras implementation of face identification model using *ArcFace* loss and *Center loss*.
 
 #### Requirements
 
@@ -15,8 +15,8 @@ $ pip install -r requirements.txt
 ```
 
 Download **VGGFace2** dataset for training to `data/` folder [here](https://www.robots.ox.ac.uk/~vgg/data/vgg_face2/)
-(images and bb_landmarks), **LFW** dataset for validation [here](http://vis-www.cs.umass.edu/lfw/)
-(funneled images and pairs.txt).
+(images and bb_landmarks) or *CASIA-WebFace* dataset [here](https://drive.google.com/file/d/1Of_EVz-yHV7QVWQGihYfvtny9Ne8qXVz/view),
+**LFW** dataset for validation [here](http://vis-www.cs.umass.edu/lfw/) (funneled images and pairs.txt).
 
 [optional]
 
@@ -38,18 +38,15 @@ $ python src/train.py
 
 After training the weights are saved to `model/` folder by default. These weights contain all training layers (2 inputs, 2 outputs - softmax and centerloss) so in order to convert them to production model (single input and output) run command
 ```
-$ python src/convert_model.py --weights model/xception_centerloss_weights.h5 --nclasses 5386 -o model/xception_prod.h5
+$ python src/convert_model.py --weights model/densenet121_arcface_weights.h5 --nclasses 5386 -o model/densenet121_arcface_prod.h5
 ```
 
 Evaluate on LFW using command
 
 ```
-$ python src/lfw_validate.py --model model/xception_prod.h5
+$ python src/lfw_validate.py --model model/densenet121_arcface_prod.h5
 ```
 
 #### Training
 
-Training took \~20 hours on NVIDIA P5000 on subset of VGGFace2 (~1M images, ~5K identities). Xception was used
-as a base model and model was trained in softmax-only setting first (λ=0). Best LFW accuracy obtained is 96.6%.
-
-Trained and converted model can be downloaded from releases [here](https://github.com/tomasmikeska/face-identification/releases/download/v1.0/xception_prod_0.966.h5).
+Training took \~30 hours on NVIDIA P5000 on subset of VGGFace2 (~1M images, ~5K identities) depending on chosen base model.
