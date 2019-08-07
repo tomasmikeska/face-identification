@@ -22,7 +22,7 @@ def train(model, image_mapping_df):
     train_labels = train_seq.get_labels()
     dev_data     = get_dev_data(image_mapping_df)
 
-    model.compile(optimizer=optimizers.SGD(lr=0.1, clipvalue=0.9),
+    model.compile(optimizer=optimizers.SGD(lr=0.001, clipvalue=0.9),
                   loss='categorical_crossentropy',
                   metrics=['accuracy', dominant_label_metric(), confidence_metric()])
     model.summary()
