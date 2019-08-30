@@ -14,6 +14,13 @@ Install pip packages using
 $ pip install -r requirements.txt
 ```
 
+Add .env file to project root with environmental variables
+```
+COMET_PROJECTNAME={comet_project_name}
+COMET_WORKSPACE={comet_workspace}
+COMET_API_KEY={comet_api_key}
+```
+
 Download **VGGFace2** dataset for training to `data/` folder [here](https://www.robots.ox.ac.uk/~vgg/data/vgg_face2/)
 (images and bb_landmarks) or **CASIA-WebFace** dataset [here](https://drive.google.com/file/d/1Of_EVz-yHV7QVWQGihYfvtny9Ne8qXVz/view),
 **LFW** dataset for validation [here](http://vis-www.cs.umass.edu/lfw/) (funneled images and pairs.txt).
@@ -28,6 +35,7 @@ or get it from Docker Hub
 ```
 docker pull tomikeska/ml-box
 ```
+
 
 #### Usage
 

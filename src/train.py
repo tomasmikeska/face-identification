@@ -4,7 +4,7 @@ from comet_ml import Experiment
 from sklearn.utils.class_weight import compute_class_weight
 from keras.models import Model
 from keras import optimizers
-from keras.callbacks import ModelCheckpoint, TensorBoard, LearningRateScheduler, TerminateOnNaN, ReduceLROnPlateau, EarlyStopping
+from keras.callbacks import ModelCheckpoint, TerminateOnNaN, ReduceLROnPlateau, EarlyStopping
 from keras.utils import to_categorical
 from model import load_model
 from metrics import dominant_label_metric, confidence_metric

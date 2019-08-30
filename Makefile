@@ -1,5 +1,3 @@
-TB_PORT=9090
-
 include .env
 export
 
@@ -11,7 +9,6 @@ remote-train:
 		--machineType "P5000" \
 		--container "tomikeska/ml-box" \
 		--workspaceArchive paperspace.zip \
-		--ports $(TB_PORT):$(TB_PORT) \
 		--command "make train"
 
 train:

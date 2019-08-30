@@ -5,7 +5,6 @@ import tensorflow as tf
 import keras.backend as K
 from keras import regularizers
 from keras.applications.densenet import DenseNet121
-# from models.densenet import DenseNet121
 from layers.arcface import ArcFace
 from constants import ARCFACE_M, ARCFACE_S
 
